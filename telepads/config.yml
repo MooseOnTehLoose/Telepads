@@ -1,0 +1,17 @@
+# If non-zero, sets the maximum linkable distance between telepads
+max_telepad_distance: 0
+
+# The center block for the telepad. EX: LAPIS_BLOCK
+telepad_center: LAPIS_BLOCK
+
+# The surrounding block for the telpad. EX: OBSIDIAN_BLOCK
+telepad_surrounding: OBSIDIAN
+
+# If true, only op can create
+op_only: false
+
+# If true, telepads are instant
+disable_teleport_wait: false
+
+# If true, telepads will not send messages to players
+disable_teleport_message: false
