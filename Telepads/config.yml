@@ -4,6 +4,9 @@ max_telepad_distance: 0
 # The center block for the telepad. EX: LAPIS_BLOCK
 telepad_center: LAPIS_BLOCK
 
+# Enable surrouding blocks, true/false
+enable_surrounding_blocks: true
+
 # The surrounding block for the telpad. EX: OBSIDIAN_BLOCK
 telepad_surrounding: OBSIDIAN
 
