@@ -7,7 +7,7 @@ telepad_center: LAPIS_BLOCK
 # Enable surrouding blocks, true/false
 enable_surrounding_blocks: true
 
-# The surrounding block for the telpad. EX: OBSIDIAN_BLOCK
+# The surrounding block for the telpad. EX: OBSIDIAN
 telepad_surrounding: OBSIDIAN
 
 # If true, only op can create
