@@ -27,7 +27,7 @@ public class Telepads extends JavaPlugin implements Listener {
     public Material TELEPAD_CENTER_ID = Material.getMaterial("LAPIS_BLOCK");
     public Material TELEPAD_SURROUNDING_ID = Material.getMaterial("OBSIDIAN");
     
-    private static Map<String, Location> mLapisLinks  = new HashMap<String, Location>();
+    private static Map<String, Location> mLinks  = new HashMap<String, Location>();
     private static Map<String, Long> mTimeouts = new HashMap<String, Long>();
     
 
@@ -128,9 +128,9 @@ public class Telepads extends JavaPlugin implements Listener {
             }
 
             //Determine the action
-            if(!mLapisLinks.containsKey(event.getPlayer().getName())){
+            if(!mLinks.containsKey(event.getPlayer().getName())){
                 //Initial telepad click
-                mLapisLinks.put(event.getPlayer().getName(),event.getClickedBlock().getRelative(BlockFace.DOWN).getLocation());
+                mLinks.put(event.getPlayer().getName(),event.getClickedBlock().getRelative(BlockFace.DOWN).getLocation());
 
                 msgPlayer(event.getPlayer(),"Telepad location stored!");
 
@@ -138,14 +138,14 @@ public class Telepads extends JavaPlugin implements Listener {
             }else{
                 //They have a stored location, and right clicked  a telepad lapis, so remove the temp location
                 if(event.getAction() == Action.RIGHT_CLICK_BLOCK){
-                    mLapisLinks.remove(event.getPlayer().getName());
+                    mLinks.remove(event.getPlayer().getName());
 
                     msgPlayer(event.getPlayer(),"Telepad location ditched! (right clicked)");
 
                     return;
                 }else{
                     //Setting up the second link
-                    Block bFirstLapis = mLapisLinks.get(event.getPlayer().getName()).getBlock();
+                    Block bFirstLapis = mLinks.get(event.getPlayer().getName()).getBlock();
 
                     if(isTelePadLapis(bFirstLapis)){
                         Block bSecondLapis = event.getClickedBlock().getRelative(BlockFace.DOWN);
@@ -162,12 +162,12 @@ public class Telepads extends JavaPlugin implements Listener {
 
                             msgPlayer(event.getPlayer(),"Well you could, but why would you want to? Maybe   you want a door or something?");
 
-                            mLapisLinks.remove(event.getPlayer().getName());
+                            mLinks.remove(event.getPlayer().getName());
 
                             return;
                         }
 
-                        mLapisLinks.remove(event.getPlayer().getName());
+                        mLinks.remove(event.getPlayer().getName());
 
                         linkTelepadLapisReceivers(bFirstLapis,event.getClickedBlock().getRelative(BlockFace.DOWN));
 
