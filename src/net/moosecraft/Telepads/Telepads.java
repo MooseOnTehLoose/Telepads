@@ -1,11 +1,13 @@
 package net.moosecraft.Telepads;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
@@ -23,11 +25,17 @@ public class Telepads extends JavaPlugin implements Listener{
     private int MAX_DISTANCE;
     private boolean OP_ONLY;
     private boolean DISABLE_TELEPORT_WAIT;
+    private boolean ENABLE_HYPER_BLOCKS;
     private int SEND_WAIT_TIMER;
     private boolean DISABLE_TELEPORT_MESSAGE;
     private boolean ENABLE_SURROUNDING_BLOCKS;
     private Material TELEPAD_CENTER_ID;
     private Material TELEPAD_SURROUNDING_ID;
+    private Material TELEPAD_HYPER_ID;
+    private static double xRange;
+    private static double yRange;
+    private static double zRange;
+    
     BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
     private static Map<String, Location> mLinks  = new HashMap<String, Location>();
     private static Map<String, Long> mTimeouts = new HashMap<String, Long>();
@@ -43,8 +51,13 @@ public class Telepads extends JavaPlugin implements Listener{
         DISABLE_TELEPORT_MESSAGE = getConfig().getBoolean("disable_teleport_message");
         TELEPAD_CENTER_ID = Material.getMaterial( getConfig().getString("telepad_center"));
         TELEPAD_SURROUNDING_ID = Material.getMaterial( getConfig().getString("telepad_surrounding"));
+        TELEPAD_HYPER_ID = Material.getMaterial(getConfig().getString("telepad_hyper"));
         ENABLE_SURROUNDING_BLOCKS = getConfig().getBoolean("enable_surrounding_blocks");
-		getLogger().info("Telepads has been enabled");
+		ENABLE_HYPER_BLOCKS = getConfig().getBoolean("enable_hyper_blocks");
+		xRange = getConfig().getDouble("xRange");
+		yRange = getConfig().getDouble("yRange");
+		zRange = getConfig().getDouble("zRange");
+        getLogger().info("Telepads has been enabled");
 		getServer().getPluginManager().registerEvents(this, this);
 		this.saveDefaultConfig();
     	
@@ -70,15 +83,22 @@ public class Telepads extends JavaPlugin implements Listener{
         return Integer.parseInt(hex, 16) - 32000;
     }
     
+    
+    
     @EventHandler // EventPriority.NORMAL by default
     public void onInteract(PlayerInteractEvent event) throws InterruptedException{
-        //Using a telepad, note we verify the timeout here after checking if it's a telepad
+        boolean HYPER_ON = false;
+    	
+    	
+    	//Using a telepad, note we verify the timeout here after checking if it's a telepad
         if(event.getAction() == Action.PHYSICAL
         && event.getClickedBlock() != null
         && isTelePad(event.getClickedBlock().getRelative(BlockFace.DOWN))
         && (!mTimeouts.containsKey(event.getPlayer().getName()) 
         	|| mTimeouts.get(event.getPlayer().getName()) < System.currentTimeMillis())){
             
+        
+        	
         	//Should resolve to TELEPAD_CENTER_ID
         	Block bSender = event.getClickedBlock().getRelative(BlockFace.DOWN);
             Block bReceiver = getTelepadReceiver(bSender);
@@ -98,23 +118,26 @@ public class Telepads extends JavaPlugin implements Listener{
 
                 Sign sbReceiverSign = (Sign) bReceiver.getRelative(BlockFace.DOWN).getState();
                 
+                
+            	if (isHyperPad(event.getClickedBlock().getRelative(BlockFace.DOWN)) && isHyperPad(bReceiver )){
+            		HYPER_ON = true;
+            	}
+                
+                
                 if(!DISABLE_TELEPORT_MESSAGE){
-                    String sMessage;
+                    String sMessage = "";
 
                     if(!DISABLE_TELEPORT_WAIT){
                         if(sbReceiverSign.getLine(3).equals("")){
-                            sMessage = "Preparing to send you, stand still!";
+                            sMessage = "A link has been established";
                         }else{
-                            sMessage = "Preparing to send you to "
-                                +ChatColor.YELLOW+sbReceiverSign.getLine(3)
-                                +ChatColor.AQUA+", stand still!";
+                            sMessage = "A link to " + sbReceiverSign.getLine(3) + " has been established";
                         }//if destination labeled
                     }else{
                         if(sbReceiverSign.getLine(3).equals("")){
-                            sMessage = "You have been teleported!";
+                            sMessage = "A link has been established";
                         }else{
-                            sMessage = "You have been teleported to "
-                                +ChatColor.YELLOW+sbReceiverSign.getLine(3);
+                        	sMessage = "A link to " + sbReceiverSign.getLine(3) + " has been established";
                         }//if destination labeled
                     }//if teleport message not disabled
                     msgPlayer(event.getPlayer(),sMessage);
@@ -124,12 +147,12 @@ public class Telepads extends JavaPlugin implements Listener{
                 if(DISABLE_TELEPORT_WAIT){
                    getServer().getScheduler().scheduleSyncDelayedTask(
                 		   this,new Teleport(
-                				   event.getPlayer(),event.getPlayer().getLocation(),bReceiver,DISABLE_TELEPORT_WAIT)
+                				   event.getPlayer(),event.getPlayer().getLocation(),bReceiver,DISABLE_TELEPORT_WAIT, HYPER_ON)
                 		   );
                 }else{
                     getServer().getScheduler().scheduleSyncDelayedTask(
                     		this,new Teleport(
-                    				event.getPlayer(),event.getPlayer().getLocation(),bReceiver,DISABLE_TELEPORT_WAIT),
+                    				event.getPlayer(),event.getPlayer().getLocation(),bReceiver,DISABLE_TELEPORT_WAIT, HYPER_ON),
                     				SEND_WAIT_TIMER);
                }//else send wait timer
             }//if verify working telepad
@@ -142,11 +165,7 @@ public class Telepads extends JavaPlugin implements Listener{
         && isTelePad(event.getClickedBlock().getRelative(BlockFace.DOWN))){
            
         	if(getTelepadReceiver(event.getClickedBlock().getRelative(BlockFace.DOWN)) != null){
-                msgPlayer(event.getPlayer(),"Error: This telepad seems to be linked already!");
-                msgPlayer(
-                		event.getPlayer(),ChatColor.YELLOW
-                		+ "You can reset it by breaking the pressure pad on top of it, then clicking the  with redstone."
-                		);
+                msgPlayer(event.getPlayer(),"previously linked");
 
                 return;
             }
@@ -244,7 +263,30 @@ public class Telepads extends JavaPlugin implements Listener{
         }//if reset Telepad
     }//onInteract
     
-    //returns true if telepad structure is correct
+    private boolean isHyperPad(Block center) {
+		if (isTelePad( center) && ENABLE_SURROUNDING_BLOCKS && ENABLE_HYPER_BLOCKS){
+			Block up = center.getRelative(BlockFace.NORTH);
+			
+			Boolean upL = (up.getRelative(BlockFace.EAST).getType() == TELEPAD_HYPER_ID);
+			Boolean upR = (up.getRelative(BlockFace.WEST).getType() == TELEPAD_HYPER_ID);
+			
+			Block dn =  center.getRelative(BlockFace.NORTH);
+			Boolean dnL = (dn.getRelative(BlockFace.EAST).getType() == TELEPAD_HYPER_ID);
+			Boolean dnR = (dn.getRelative(BlockFace.WEST).getType() == TELEPAD_HYPER_ID);
+			
+			if ( upL && upR && dnL && dnR ){
+				
+				return true;
+			
+			}//if a hyperpad	
+		
+		}//if a telepad
+		
+		return false;
+	
+    }//isHyperPad
+
+	//returns true if telepad structure is correct
     public boolean isTelePad(Block center){
     	Boolean in = ( center.getType() == TELEPAD_CENTER_ID );
     	Boolean hi = ( center.getRelative(BlockFace.UP).getType() == Material.STONE_PLATE);
@@ -331,35 +373,64 @@ public class Telepads extends JavaPlugin implements Listener{
         
     	private final Player player;
         private final Location player_location;
-        private final Block receiver;
-        private final boolean disable_teleport_wait;    	
+        private final Block receiver; 	
+    	private final boolean hyper_active;
     	
-    	Teleport(Player player,Location player_location,Block receiver,boolean disable_teleport_wait){
+    	Teleport(Player player,Location player_location,Block receiver,boolean disable_teleport_wait, boolean hyper_active){
             this.player = player;
             this.player_location = player_location;
             this.receiver = receiver;
-            this.disable_teleport_wait = disable_teleport_wait;	
+            this.hyper_active = hyper_active;
     	}
 
         @Override
         public void run() {
         	
-        	//cancel teleport if the player moves
-            if(getDistance(player_location, player.getLocation()) > 1){
-                msgPlayer(player,"You moved, cancelling teleport!");
-                return;
-             }
-        	//send player teleport success if there is a delay
-            if(!disable_teleport_wait){
-               msgPlayer(player,"Here goes nothing!");
+        	if (hyper_active) {
+        		
+        		if(getDistance(player_location, player.getLocation()) > 1){	
+        			return;
+        		}
+        		
+        		
+        		List<Entity> entities =  player.getNearbyEntities(xRange,yRange,zRange);
+        		
+        		for (Entity e : entities){
+        			Location lSendTo = receiver.getRelative(BlockFace.UP,2).getLocation();
+        			lSendTo.setX(lSendTo.getX()+0.5);
+            		lSendTo.setZ(lSendTo.getZ()+0.5);
+            		lSendTo.setPitch(e.getLocation().getPitch());
+            		lSendTo.setYaw(player.getLocation().getYaw());
+            		e.teleport(lSendTo);
+        		}
+        		
+        		Location lSendTo = receiver.getRelative(BlockFace.UP,2).getLocation();
+        		lSendTo.setX(lSendTo.getX()+0.5);
+        		lSendTo.setZ(lSendTo.getZ()+0.5);
+        		lSendTo.setPitch(player.getLocation().getPitch());
+        		lSendTo.setYaw(player.getLocation().getYaw());
+        		player.teleport(lSendTo);
+        		
+        		mTimeouts.put(player.getName(),System.currentTimeMillis()+5000);
+        		
+        		
         	}
-            Location lSendTo = receiver.getRelative(BlockFace.UP,2).getLocation();
-            lSendTo.setX(lSendTo.getX()+0.5);
-            lSendTo.setZ(lSendTo.getZ()+0.5);
-            lSendTo.setPitch(player.getLocation().getPitch());
-            lSendTo.setYaw(player.getLocation().getYaw());
-            player.teleport(lSendTo);
-            mTimeouts.put(player.getName(),System.currentTimeMillis()+5000);
+        	
+        	else{
+        		//cancel teleport if the player moves
+        		if(getDistance(player_location, player.getLocation()) > 1){
+        			return;
+        		}
+
+        		Location lSendTo = receiver.getRelative(BlockFace.UP,2).getLocation();
+        		lSendTo.setX(lSendTo.getX()+0.5);
+        		lSendTo.setZ(lSendTo.getZ()+0.5);
+        		lSendTo.setPitch(player.getLocation().getPitch());
+        		lSendTo.setYaw(player.getLocation().getYaw());
+        		player.teleport(lSendTo);
+        		mTimeouts.put(player.getName(),System.currentTimeMillis()+5000);
+            
+        	}//if regular
         }//run
     }//class Teleport
 }//class Telepads	
