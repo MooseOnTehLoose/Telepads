@@ -38,7 +38,7 @@ None at this time
   * telepad_surrounding: The ID for the blocks surrounding the center. Default block is Obsidian.
   * enable_hyper_blocks: If set to true, wide-area entity transportation will be enabled. Requires enable_surrounding_blocks at the moment.
   * telepad_hyper:The ID for the hyper blocks. Default block is Sea Lantern.
-  * xRange, yRange, zRange: This integer value determines the range around the telepad entities can be teleported from. Default is 2 for each.
+  * xRange, yRange, zRange: This integer value determines the range around the telepad entities can be teleported from. Default is 5 for each.
   * op_only: If set to true, only OP may construct telepads. Default is false.
   * disable_teleport_wait: If set to true, telepads activate instantly. Default is false.
   * send_wait_timer: Time in seconds to wait before teleport occurs. Default is 3.
