@@ -55,6 +55,7 @@ public class Telepads extends JavaPlugin implements Listener{
         TELEPAD_SURROUNDING_ID = Material.getMaterial( getConfig().getString("telepad_surrounding"));
         ENABLE_SURROUNDING_BLOCKS = getConfig().getBoolean("enable_surrounding_blocks");
 		ENABLE_HYPER_BLOCKS = getConfig().getBoolean("enable_hyper_blocks");
+		TELEPAD_HYPER_ID = Material.getMaterial(getConfig().getString("telepad_hyper"));
 		xRange = getConfig().getDouble("xRange");
 		yRange = getConfig().getDouble("yRange");
 		zRange = getConfig().getDouble("zRange");
@@ -119,20 +120,39 @@ public class Telepads extends JavaPlugin implements Listener{
             	}
                 
                 if(!DISABLE_TELEPORT_MESSAGE){
-                    String sMessage;
+                    String sMessage = "";
 
                     if(!DISABLE_TELEPORT_WAIT){
                     	//if(sbReceiverSign.getLine(3).equals("")){
                         if(sbReceiverSign.getSide(Side.FRONT).getLine(3).equals("")){
-                            sMessage = "Preparing to send you, stand still!";
-                        }else{
-                            sMessage = "Preparing to send you to "
-                                +ChatColor.YELLOW+sbReceiverSign.getSide(Side.FRONT).getLine(3)
-                                +ChatColor.AQUA+", stand still!";
+                            if (HYPER_ON) {
+                            	sMessage = "Hyperpad Charging";
+                            }else {
+                
+                            	sMessage = "Telepad Charging";
+                            }
+                        }
+                        
+                        else{
+                            if (HYPER_ON) {
+                            	sMessage = "Hyperpad Destination Locked:  "
+                                        +ChatColor.YELLOW+sbReceiverSign.getSide(Side.FRONT).getLine(3);
+                            }else {
+                
+                            	sMessage = "Telepad Destination Locked:  "
+                                        +ChatColor.YELLOW+sbReceiverSign.getSide(Side.FRONT).getLine(3);
+                            }
+                                                        
                         }//if destination labeled
                     }else{
                         if(sbReceiverSign.getSide(Side.FRONT).getLine(3).equals("")){
-                            sMessage = "You have been teleported!";
+                            
+                            if (HYPER_ON) {
+                            	sMessage = "Hyperpad translation successful";
+                            }else {
+                
+                            	sMessage = "Telepad translation successful";
+                            }
                         }else{
                             sMessage = "You have been teleported to "
                                 +ChatColor.YELLOW+sbReceiverSign.getSide(Side.FRONT).getLine(3);
@@ -267,10 +287,9 @@ public class Telepads extends JavaPlugin implements Listener{
 			Boolean dnR = (dn.getRelative(BlockFace.WEST).getType() == TELEPAD_HYPER_ID);
 			
 			if ( upL && upR && dnL && dnR ){
-				
 				return true;
 			
-			}//if a hyperpad	
+			}
 		
 		}//if a telepad
 		
@@ -380,6 +399,7 @@ public class Telepads extends JavaPlugin implements Listener{
         	if (hyper_active) {
         		
         		if(getDistance(player_location, player.getLocation()) > 1){	
+        			System.out.println("error");
         			return;
         		}
         		
