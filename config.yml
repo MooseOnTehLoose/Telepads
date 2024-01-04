@@ -1,4 +1,4 @@
-# If non-zero, sets the maximum linkable distance between telepads, EX: 150
+# If non-zero, sets the maximum linkable distance between telepads
 max_telepad_distance: 0
 
 # The center block for the telepad. EX: LAPIS_BLOCK
@@ -17,9 +17,9 @@ enable_hyper_blocks: true
 telepad_hyper: SEA_LANTERN
 
 # HyperTransport X,Y,Z range: EX 1 / 2 / 3
-xRange: 2
-yRange: 2
-zRange: 2
+xRange: 5
+yRange: 5
+zRange: 5
 
 # If true, only op can create
 op_only: false
