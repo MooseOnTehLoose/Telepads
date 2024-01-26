@@ -1,0 +1,34 @@
+# If non-zero, sets the maximum linkable distance between telepads
+max_telepad_distance: 0
+
+# The center block for the telepad. EX: LAPIS_BLOCK
+telepad_center: LAPIS_BLOCK
+
+# Enable surrouding blocks, true/false
+enable_surrounding_blocks: true
+
+# The surrounding block for the telpad. EX: OBSIDIAN
+telepad_surrounding: OBSIDIAN
+
+# Enable HYPER blocks, true/false ( requires surrounding blocks)
+enable_hyper_blocks: true
+
+# HyperTransport block EX: SEA_LANTERN ( requires surrounding blocks)
+telepad_hyper: SEA_LANTERN
+
+# HyperTransport X,Y,Z range: EX 1 / 2 / 3
+xRange: 5
+yRange: 5
+zRange: 5
+
+# If true, only op can create
+op_only: false
+
+# If true, telepads are instant
+disable_teleport_wait: false
+
+# Wait time in seconds. Only valid if telport wait is enabled
+send_wait_timer: 3
+
+# If true, telepads will not send messages to players
+disable_teleport_message: false

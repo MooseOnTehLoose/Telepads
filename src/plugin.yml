@@ -1,0 +1,9 @@
+name: Telepads
+author: MooseOnTehLoose
+main: net.moosecraft.Telepads.Telepads
+version: 2.2-1.20.2
+api-version: 1.20
+commands:
+   telepads:
+      description: build two way teleporters for rapid travel
+      usage: "instructions: https://github.com/MooseOnTehLoose/Telepads"
